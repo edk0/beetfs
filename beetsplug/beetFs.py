@@ -305,7 +305,7 @@ class InterpolatedFLAC (FLAC):
             if len(data) != size:
                 raise Exception("file said %d bytes, read %d bytes"
                                 % (size, len(data)))
-                block = self.METADATA_BLOCKS[byte & 0x7F](data)
+            block = self.METADATA_BLOCKS[byte & 0x7F](data)
         except (IndexError, TypeError):
             block = MetadataBlock(data)
             block.code = byte & 0x7F
