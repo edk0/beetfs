@@ -1001,7 +1001,7 @@ class beetFileSystem(fuse.Fuse):
 
             return self.files[path]
         except Exception as e:
-            logging.info("Error creating a File Handler: %s" % e)
+            logging.info("Error creating a File Handler", exc_info=True)
             return -errno.EACCES
 
     def create(self, path, mode, rdev):
