@@ -197,7 +197,7 @@ class beetFs(BeetsPlugin):
 def to_int_be(string):
     """Convert an arbitrarily-long string to a long using big-endian
     byte order."""
-    return reduce(lambda a, b: (a << 8) + ord(b), string, 0)
+    return int.from_bytes(string, byteorder='big')
 
 
 class InterpolatedID3 (ID3):
@@ -287,7 +287,7 @@ class InterpolatedFLAC (FLAC):
 
         while self.__read_metadata_block(self.fileobj):
             pass
-        if self.fileobj.read(2) not in ["\xff\xf8", "\xff\xf9"]:
+        if self.fileobj.read(2) not in [b"\xff\xf8", b"\xff\xf9"]:
             raise FLACNoHeaderError("End of metadata did not start audio")
 
         try:
@@ -369,7 +369,7 @@ class InterpolatedFLAC (FLAC):
     def __find_audio_offset(self, fileobj):
         byte = 0x00
         while not (byte >> 7) & 1:
-            byte = ord(fileobj.read(1))
+            byte = fileobj.read(1)[0]
             size = to_int_be(fileobj.read(3))
             fileobj.read(size)
         return fileobj.tell()
@@ -377,16 +377,15 @@ class InterpolatedFLAC (FLAC):
     def __check_header(self, fileobj):
         size = 4
         header = fileobj.read(4)
-        if header != "fLaC":
+        if header != b"fLaC":
             size = None
-            if header[:3] == "ID3":
+            if header[:3] == b"ID3":
                 size = 14 + BitPaddedInt(fileobj.read(6)[2:])
                 fileobj.seek(size - 4)
-                if fileobj.read(4) != "fLaC":
+                if fileobj.read(4) != b"fLaC":
                     size = None
         if size is None:
-            raise FLACNoHeaderError("%r is not a valid FLAC file"
-                                    % fileobj.name)
+            raise FLACNoHeaderError("not a valid FLAC file")
             return size
 
 
@@ -453,7 +452,7 @@ class FileHandler(object):
         self.real_path = self.item.path
 
         # open the on-disk file for reading
-        self.file_object = open(self.real_path, 'r+')
+        self.file_object = open(self.real_path, 'rb')
         self.instance_count = 1
 
         # now get the bounds of the file_class
@@ -963,13 +962,13 @@ class beetFileSystem(fuse.Fuse):
                 for files in directory_structure.listdir(pathsplit, False):
                     logging.info("Yielding file: %s"
                                  % files.encode('utf-8'))
-                    yield fuse.Direntry(files.encode('utf-8'))
+                    yield fuse.Direntry(files)
             else:
                 # directories
                 for files in directory_structure.listdir(pathsplit, True):
                     #logging.info("Yielding dir: %s"
                     #             % files.encode('utf-8'))
-                    yield fuse.Direntry(files.encode('utf-8'))
+                    yield fuse.Direntry(files)
 
         except Exception as e:
             logging.error(e)
