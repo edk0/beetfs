@@ -97,7 +97,7 @@ def template_mapping(lib, item):
             value = str(value)
         mapping[key] = value
 
-    format_ = os.path.splitext(item.path)[1][1:]
+    format_ = os.path.splitext(item.path)[1][1:].decode()
     mapping['format'] = re.sub(r'[\\/:]|^\.', '_', format_)
     mapping['format_upper'] = re.sub(r'[\\/:]|^\.', '_', format_).upper()
 
