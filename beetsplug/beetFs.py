@@ -122,6 +122,8 @@ def mount(lib, opts, args):
     if not args:
         raise beets.ui.UserError('no mountpoint specified')
 
+    logging.basicConfig(filename='LOG', level=logging.DEBUG)
+
     # build the in-memory folder structure
     global structure_split
     structure_split = PATH_FORMAT.split("/")
@@ -622,9 +624,6 @@ class Stat(fuse.Stat):
 
 class beetFileSystem(fuse.Fuse):
     def __init__(self, *args, **kwargs):
-        LOG_FILENAME = "LOG"
-        logging.basicConfig(filename=LOG_FILENAME, level=logging.INFO,)
-
         logging.info("Preparing to mount file system")
         super(beetFileSystem, self).__init__(*args, **kwargs)
 
