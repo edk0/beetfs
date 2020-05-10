@@ -330,38 +330,23 @@ class InterpolatedFLAC (FLAC):
         return (byte >> 7) ^ 1
 
     def get_header(self, filename=None):
-
         f = self.fileobj
         f.seek(0)
 
-        # Ensure we've got padding at the end, and only at the end.
-        # If adding makes it too large, we'll scale it down later.
-        self.metadata_blocks.append(Padding('\x00' * 1020))
-        MetadataBlock.group_padding(self.metadata_blocks)
+        self.__check_header(f)
+        self.__offset = self.__find_audio_offset(f)
+        data = bytearray(b'fLaC')
 
-        header = self.__check_header(f)
-        # "fLaC" and maybe ID3
-        available = self.__find_audio_offset(f) - header
-        data = MetadataBlock.writeblocks(self.metadata_blocks)
+        for block in self.metadata_blocks:
+            if isinstance(block, Padding):
+                continue
+            data += MetadataBlock._writeblock(block)
 
-        if len(data) > available:
-            # If we have too much data, see if we can reduce padding.
-            padding = self.metadata_blocks[-1]
-            newlength = padding.length - (len(data) - available)
-            if newlength > 0:
-                padding.length = newlength
-                data = MetadataBlock.writeblocks(self.metadata_blocks)
-                assert len(data) == available
+        padding = Padding()
+        padding.length = 1020
+        data += MetadataBlock._writeblock(padding, is_last=True)
 
-        elif len(data) < available:
-            # If we have too little data, increase padding.
-            self.metadata_blocks[-1].length += (available - len(data))
-            data = MetadataBlock.writeblocks(self.metadata_blocks)
-            assert len(data) == available
-
-        self.__offset = len("fLaC" + data)
-
-        return("fLaC" + data)
+        return bytes(data)
 
     def offset(self):
         return self.__offset
