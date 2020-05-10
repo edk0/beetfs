@@ -756,390 +756,390 @@ class beetFileSystem(fuse.Fuse):
 
                 return 0
 
-        def readlink(self, path):
-            """
-            Get the target of a symlink.
-            Returns a bytestring with the contents of a symlink (its target).
-            May also return an int error code.
-            """
-            logging.info("readlink: %s" % path)
-            return -errno.EOPNOTSUPP
+    def readlink(self, path):
+        """
+        Get the target of a symlink.
+        Returns a bytestring with the contents of a symlink (its target).
+        May also return an int error code.
+        """
+        logging.info("readlink: %s" % path)
+        return -errno.EOPNOTSUPP
 
-        def mknod(self, path, mode, rdev):
-            """
-            Creates a non-directory file (or a device node).
-            mode: Unix file mode flags for the file being created.
-            rdev: Special properties for creation of character or block special
-                    devices (I've never gotten this to work).
-                    Always 0 for regular files or FIFO buffers.
-            """
-            # Note: mode & 0770000 gives you the non-permission bits.
-            # Common ones:
-            # S_IFREG:  0100000 (A regular file)
-            # S_IFIFO:  010000  (A fifo buffer, created with mkfifo)
+    def mknod(self, path, mode, rdev):
+        """
+        Creates a non-directory file (or a device node).
+        mode: Unix file mode flags for the file being created.
+        rdev: Special properties for creation of character or block special
+                devices (I've never gotten this to work).
+                Always 0 for regular files or FIFO buffers.
+        """
+        # Note: mode & 0770000 gives you the non-permission bits.
+        # Common ones:
+        # S_IFREG:  0100000 (A regular file)
+        # S_IFIFO:  010000  (A fifo buffer, created with mkfifo)
 
-            # Potential ones (I have never seen them):
-            # Note that these could be made by copying special devices or
-            # sockets or using mknod, but I've never gotten FUSE to pass such
-            # a request along.
-            # S_IFCHR:  020000  (character special device, created with mknod)
-            # S_IFBLK:  060000  (block special device, created with mknod)
-            # S_IFSOCK: 0140000 (socket, created with mkfifo)
+        # Potential ones (I have never seen them):
+        # Note that these could be made by copying special devices or
+        # sockets or using mknod, but I've never gotten FUSE to pass such
+        # a request along.
+        # S_IFCHR:  020000  (character special device, created with mknod)
+        # S_IFBLK:  060000  (block special device, created with mknod)
+        # S_IFSOCK: 0140000 (socket, created with mkfifo)
 
-            # Also note: You can use self.GetContext() to get a dictionary
-            #           {'uid': ?, 'gid': ?}, which tells you the uid/gid of
-            #           the user executing the current syscall. This should be
-            #           handy when creating new files and directories, because
-            #           they should be owned by this user/group.
-            logging.info("mknod: %s (mode %s, rdev %s)" % (path, oct(mode),
-                                                           rdev))
-            return -errno.EOPNOTSUPP
+        # Also note: You can use self.GetContext() to get a dictionary
+        #           {'uid': ?, 'gid': ?}, which tells you the uid/gid of
+        #           the user executing the current syscall. This should be
+        #           handy when creating new files and directories, because
+        #           they should be owned by this user/group.
+        logging.info("mknod: %s (mode %s, rdev %s)" % (path, oct(mode),
+                                                       rdev))
+        return -errno.EOPNOTSUPP
 
-        def mkdir(self, path, mode):
-            """
-            Creates a directory.
-            mode: Unix file mode flags for the directory being created.
-            """
-            # Note: mode & 0770000 gives you the non-permission bits.
-            # Should be S_IDIR (040000); I guess you can assume this.
-            # Also see note about self.GetContext() in mknod.
-            logging.info("mkdir: %s (mode %s)" % (path, oct(mode)))
-            return -errno.EOPNOTSUPP
+    def mkdir(self, path, mode):
+        """
+        Creates a directory.
+        mode: Unix file mode flags for the directory being created.
+        """
+        # Note: mode & 0770000 gives you the non-permission bits.
+        # Should be S_IDIR (040000); I guess you can assume this.
+        # Also see note about self.GetContext() in mknod.
+        logging.info("mkdir: %s (mode %s)" % (path, oct(mode)))
+        return -errno.EOPNOTSUPP
 
-        def unlink(self, path):
-            """ Deletes a file."""
-            logging.info("unlink: %s" % path)
-            return -errno.EOPNOTSUPP
+    def unlink(self, path):
+        """ Deletes a file."""
+        logging.info("unlink: %s" % path)
+        return -errno.EOPNOTSUPP
 
-        def rmdir(self, path):
-            """ Deletes a directory."""
-            logging.info("rmdir: %s" % path)
-            return -errno.EOPNOTSUPP
+    def rmdir(self, path):
+        """ Deletes a directory."""
+        logging.info("rmdir: %s" % path)
+        return -errno.EOPNOTSUPP
 
-        def symlink(self, target, name):
-            """
-            Creates a symbolic link from path to target.
+    def symlink(self, target, name):
+        """
+        Creates a symbolic link from path to target.
 
-            The 'name' is a regular path like any other method (absolute, but
-            relative to the filesystem root).
-            The 'target' is special - it works just like any symlink target. It
-            may be absolute, in which case it is absolute on the user's system,
-            NOT the mounted filesystem, or it may be relative. It should be
-            treated as an opaque string - the filesystem implementation should
-            not ever need to follow it (that is handled by the OS).
+        The 'name' is a regular path like any other method (absolute, but
+        relative to the filesystem root).
+        The 'target' is special - it works just like any symlink target. It
+        may be absolute, in which case it is absolute on the user's system,
+        NOT the mounted filesystem, or it may be relative. It should be
+        treated as an opaque string - the filesystem implementation should
+        not ever need to follow it (that is handled by the OS).
 
-            Hence, if the operating system creates a link FROM this system TO
-            another system, it will call this method with a target pointing
-            outside the filesystem.
-            If the operating system creates a link FROM some other system TO
-            this system, it will not touch this system at all (symlinks do not
-            depend on the target system unless followed).
-            """
-            logging.info("symlink: target %s, name: %s" % (target, name))
-            return -errno.EOPNOTSUPP
+        Hence, if the operating system creates a link FROM this system TO
+        another system, it will call this method with a target pointing
+        outside the filesystem.
+        If the operating system creates a link FROM some other system TO
+        this system, it will not touch this system at all (symlinks do not
+        depend on the target system unless followed).
+        """
+        logging.info("symlink: target %s, name: %s" % (target, name))
+        return -errno.EOPNOTSUPP
 
-        def link(self, target, name):
-            """
-            Creates a hard link from name to target. Note that both paths are
-            relative to the mounted file system. Hard-links across systems are
-            not supported.
-            """
-            logging.info("link: target %s, name: %s" % (target, name))
-            return -errno.EOPNOTSUPP
+    def link(self, target, name):
+        """
+        Creates a hard link from name to target. Note that both paths are
+        relative to the mounted file system. Hard-links across systems are
+        not supported.
+        """
+        logging.info("link: target %s, name: %s" % (target, name))
+        return -errno.EOPNOTSUPP
 
-        def rename(self, old, new):
-            """
-            Moves a file from old to new. (old and new are both full paths, and
-            may not be in the same directory).
+    def rename(self, old, new):
+        """
+        Moves a file from old to new. (old and new are both full paths, and
+        may not be in the same directory).
 
-            Note that both paths are relative to the mounted file system.
-            If the operating system needs to move files across systems, it will
-            manually copy and delete the file, and this method will not be
-            called.
-            """
-            logging.info("rename: target %s, name: %s" % (old, new))
-            return -errno.EOPNOTSUPP
+        Note that both paths are relative to the mounted file system.
+        If the operating system needs to move files across systems, it will
+        manually copy and delete the file, and this method will not be
+        called.
+        """
+        logging.info("rename: target %s, name: %s" % (old, new))
+        return -errno.EOPNOTSUPP
 
-        def chmod(self, path, mode):
-            """ Changes the mode of a file or directory."""
-            logging.info("chmod: %s (mode %s)" % (path, oct(mode)))
-            return -errno.EOPNOTSUPP
+    def chmod(self, path, mode):
+        """ Changes the mode of a file or directory."""
+        logging.info("chmod: %s (mode %s)" % (path, oct(mode)))
+        return -errno.EOPNOTSUPP
 
-        def chown(self, path, uid, gid):
-            """ Changes the owner of a file or directory."""
-            logging.info("chown: %s (uid %s, gid %s)" % (path, uid, gid))
-            return -errno.EOPNOTSUPP
+    def chown(self, path, uid, gid):
+        """ Changes the owner of a file or directory."""
+        logging.info("chown: %s (uid %s, gid %s)" % (path, uid, gid))
+        return -errno.EOPNOTSUPP
 
-        def truncate(self, path, size):
-            """
-            Shrink or expand a file to a given size.
-            If 'size' is smaller than the existing file size, truncate it from
-            the end.
-            If 'size' if larger than the existing file size, extend it with
-            null bytes.
-            """
-            logging.info("truncate: %s (size %s)" % (path, size))
-            return -errno.EOPNOTSUPP
+    def truncate(self, path, size):
+        """
+        Shrink or expand a file to a given size.
+        If 'size' is smaller than the existing file size, truncate it from
+        the end.
+        If 'size' if larger than the existing file size, extend it with
+        null bytes.
+        """
+        logging.info("truncate: %s (size %s)" % (path, size))
+        return -errno.EOPNOTSUPP
 
-        ### DIRECTORY OPERATION METHODS ###
-        # Methods in this section are operations for opening directories and
-        # working on open directories.
-        # "opendir" is the method for opening directories. It *may* return an
-        # arbitrary Python object (not None or int), which is used as a dir
-        # handle by the methods for working on directories.
-        # All the other methods (readdir, fsyncdir, releasedir) are methods for
-        # working on directories. They should all be prepared to accept an
-        # optional dir-handle argument, which is whatever object "opendir"
-        # returned.
+    ### DIRECTORY OPERATION METHODS ###
+    # Methods in this section are operations for opening directories and
+    # working on open directories.
+    # "opendir" is the method for opening directories. It *may* return an
+    # arbitrary Python object (not None or int), which is used as a dir
+    # handle by the methods for working on directories.
+    # All the other methods (readdir, fsyncdir, releasedir) are methods for
+    # working on directories. They should all be prepared to accept an
+    # optional dir-handle argument, which is whatever object "opendir"
+    # returned.
 
-        def opendir(self, path):
-            """
-            Checks permissions for listing a directory.
-            This should check the 'r' (read) permission on the directory.
+    def opendir(self, path):
+        """
+        Checks permissions for listing a directory.
+        This should check the 'r' (read) permission on the directory.
 
-            On success, *may* return an arbitrary Python object, which will be
-            used as the "fh" argument to all the directory operation methods on
-            the directory. Or, may just return None on success.
-            On failure, should return a negative errno code.
-            Should return -errno.EACCES if disallowed.
-            """
-            logging.info("opendir: %s" % path)
-            pathsplit = path[1:].split('/')
-            if path == "/":
-                return directory_structure
+        On success, *may* return an arbitrary Python object, which will be
+        used as the "fh" argument to all the directory operation methods on
+        the directory. Or, may just return None on success.
+        On failure, should return a negative errno code.
+        Should return -errno.EACCES if disallowed.
+        """
+        logging.info("opendir: %s" % path)
+        pathsplit = path[1:].split('/')
+        if path == "/":
+            return directory_structure
+        else:
+            if not (pathsplit[len(pathsplit) - 1]
+                    in directory_structure
+                    .getnode(pathsplit[0:len(pathsplit)-1]).dirs):
+                return -errno.EACCES
             else:
-                if not (pathsplit[len(pathsplit) - 1]
-                        in directory_structure
-                        .getnode(pathsplit[0:len(pathsplit)-1]).dirs):
-                    return -errno.EACCES
+                return (directory_structure
+                        .getnode(pathsplit[0:len(pathsplit)-1])
+                        .dirs[pathsplit[len(pathsplit) - 1]])
+
+    def releasedir(self, path, dh=None):
+        """ Closes an open directory. Allows filesystem to clean up."""
+        logging.info("releasedir: %s (dh %s)" % (path, dh))
+
+    def fsyncdir(self, path, datasync, dh=None):
+        """
+        Synchronises an open directory.
+        datasync: If True, only flush user data, not metadata.
+        """
+        logging.info("fsyncdir: %s (datasync %s, dh %s)"
+                     % (path, datasync, dh))
+
+    def readdir(self, path, offset, dh=None):
+        """
+        Generator function. Produces a directory listing.
+        Yields individual fuse.Direntry objects, one per file in the
+        directory. Should always yield at least "." and "..".
+        Should yield nothing if the file is not a directory or does not
+        exist. (Does not need to raise an error).
+
+        offset: I don't know what this does, but I think it allows the OS
+        to request starting the listing partway through (which I clearly
+        don't yet support). Seems to always be 0 anyway.
+        """
+        logging.info("readdir: %s (offset %s, dh %s)" % (path, offset, dh))
+
+        yield fuse.Direntry(".")
+        yield fuse.Direntry("..")
+
+        try:
+            pathsplit = path[1:].split('/')
+
+            if dh is None:
+                if path == "/":
+                    logging.info("dh assigned as root")
+                    dh = directory_structure
                 else:
-                    return (directory_structure
-                            .getnode(pathsplit[0:len(pathsplit)-1])
-                            .dirs[pathsplit[len(pathsplit) - 1]])
+                    dh = (directory_structure
+                          .getnode(pathsplit[0:len(pathsplit)-1])
+                          .dirs[pathsplit[len(pathsplit)]])
 
-        def releasedir(self, path, dh=None):
-            """ Closes an open directory. Allows filesystem to clean up."""
-            logging.info("releasedir: %s (dh %s)" % (path, dh))
+            if len(pathsplit) == structure_depth - 1:
+                # files
+                logging.info("Yielding files: %s" % path)
+                for files in directory_structure.listdir(pathsplit, False):
+                    logging.info("Yielding file: %s"
+                                 % files.encode('utf-8'))
+                    yield fuse.Direntry(files.encode('utf-8'))
+            else:
+                # directories
+                for files in directory_structure.listdir(pathsplit, True):
+                    #logging.info("Yielding dir: %s"
+                    #             % files.encode('utf-8'))
+                    yield fuse.Direntry(files.encode('utf-8'))
 
-        def fsyncdir(self, path, datasync, dh=None):
-            """
-            Synchronises an open directory.
-            datasync: If True, only flush user data, not metadata.
-            """
-            logging.info("fsyncdir: %s (datasync %s, dh %s)"
-                         % (path, datasync, dh))
+        except Exception as e:
+            logging.error(e)
 
-        def readdir(self, path, offset, dh=None):
-            """
-            Generator function. Produces a directory listing.
-            Yields individual fuse.Direntry objects, one per file in the
-            directory. Should always yield at least "." and "..".
-            Should yield nothing if the file is not a directory or does not
-            exist. (Does not need to raise an error).
+    ### FILE OPERATION METHODS ###
+    # Methods in this section are operations for opening files and working
+    # on open files.
+    # "open" and "create" are methods for opening files. They *may* return
+    # an arbitrary Python object (not None or int), which is used as a file
+    # handle by the methods for working on files.
+    # All the other methods (fgetattr, release, read, write, fsync, flush,
+    # ftruncate and lock) are methods for working on files. They should all
+    # be prepared to accept an optional file-handle argument, which is
+    # whatever object "open" or "create" returned.
 
-            offset: I don't know what this does, but I think it allows the OS
-            to request starting the listing partway through (which I clearly
-            don't yet support). Seems to always be 0 anyway.
-            """
-            logging.info("readdir: %s (offset %s, dh %s)" % (path, offset, dh))
+    def open(self, path, flags):
+        """
+        Open a file for reading/writing, and check permissions.
+        flags: As described in man 2 open (Linux Programmer's Manual).
+               ORing of several access flags, including one of
+               os.O_RDONLY, os.O_WRONLY or os.O_RDWR. All other flags are
+               in os as well.
 
-            yield fuse.Direntry(".")
-            yield fuse.Direntry("..")
+        On success, *may* return an arbitrary Python object, which will be
+        used as the "fh" argument to all the file operation methods on the
+        file. Or, may just return None on success.
+        On failure, should return a negative errno code.
+        Should return -errno.EACCES if disallowed.
+        """
+        logging.info("open: %s (flags %s)" % (path, oct(flags)))
 
-            try:
-                pathsplit = path[1:].split('/')
+        try:
+            if self.files is None:
+                self.files = {"x": "y"}
 
-                if dh is None:
-                    if path == "/":
-                        logging.info("dh assigned as root")
-                        dh = directory_structure
-                    else:
-                        dh = (directory_structure
-                              .getnode(pathsplit[0:len(pathsplit)-1])
-                              .dirs[pathsplit[len(pathsplit)]])
+            if path in self.files:
+                # get a file object
+                logging.info("Retrieving an existing File Handler for: %s"
+                             % path)
+                self.files[path].open()
+            else:
+                # create a file open
+                logging.info("Creating a File Handler for: %s" % path)
+                self.files[path] = FileHandler(path, self.lib)
 
-                if len(pathsplit) == structure_depth - 1:
-                    # files
-                    logging.info("Yielding files: %s" % path)
-                    for files in directory_structure.listdir(pathsplit, False):
-                        logging.info("Yielding file: %s"
-                                     % files.encode('utf-8'))
-                        yield fuse.Direntry(files.encode('utf-8'))
-                else:
-                    # directories
-                    for files in directory_structure.listdir(pathsplit, True):
-                        #logging.info("Yielding dir: %s"
-                        #             % files.encode('utf-8'))
-                        yield fuse.Direntry(files.encode('utf-8'))
+            return self.files[path]
+        except Exception as e:
+            logging.info("Error creating a File Handler: %s" % e)
+            return -errno.EACCES
 
-            except Exception as e:
-                logging.error(e)
+    def create(self, path, mode, rdev):
+        """
+        Creates a file and opens it for writing.
+        Will be called in favour of mknod+open, but it's optional (OS will
+        fall back on that sequence).
+        mode: Unix file mode flags for the file being created.
+        rdev: Special properties for creation of character or block special
+                devices (I've never gotten this to work).
+                Always 0 for regular files or FIFO buffers.
+        See "open" for return value.
+        """
+        logging.info("create: %s (mode %s, rdev %s)"
+                     % (path, oct(mode), rdev))
+        return -errno.EOPNOTSUPP
 
-        ### FILE OPERATION METHODS ###
-        # Methods in this section are operations for opening files and working
-        # on open files.
-        # "open" and "create" are methods for opening files. They *may* return
-        # an arbitrary Python object (not None or int), which is used as a file
-        # handle by the methods for working on files.
-        # All the other methods (fgetattr, release, read, write, fsync, flush,
-        # ftruncate and lock) are methods for working on files. They should all
-        # be prepared to accept an optional file-handle argument, which is
-        # whatever object "open" or "create" returned.
+    def fgetattr(self, path, fh=None):
+        """
+        Retrieves information about a file (the "stat" of a file).
+        Same as Fuse.getattr, but may be given a file handle to an open
+        file, so it can use that instead of having to look up the path.
+        """
+        logging.info("fgetattr: %s (fh %s)" % (path, fh))
+        # We could use fh for a more efficient lookup. Here we just call
+        # the non-file-handle version, getattr.
+        return self.getattr(path)
 
-        def open(self, path, flags):
-            """
-            Open a file for reading/writing, and check permissions.
-            flags: As described in man 2 open (Linux Programmer's Manual).
-                   ORing of several access flags, including one of
-                   os.O_RDONLY, os.O_WRONLY or os.O_RDWR. All other flags are
-                   in os as well.
+    def release(self, path, flags, fh=None):
+        """
+        Closes an open file. Allows filesystem to clean up.
+        flags: The same flags the file was opened with (see open).
+        """
+        logging.info("release: %s (flags %s, fh %s)" % (path, oct(flags),
+                                                        fh))
+        if self.files[path].release():
+            logging.info("Complete release: %s (flags %s, fh %s)"
+                         % (path, oct(flags), fh))
+            del self.files[path]
 
-            On success, *may* return an arbitrary Python object, which will be
-            used as the "fh" argument to all the file operation methods on the
-            file. Or, may just return None on success.
-            On failure, should return a negative errno code.
-            Should return -errno.EACCES if disallowed.
-            """
-            logging.info("open: %s (flags %s)" % (path, oct(flags)))
+    def fsync(self, path, datasync, fh=None):
+        """
+        Synchronises an open file.
+        datasync: If True, only flush user data, not metadata.
+        """
+        logging.info("fsync: %s (datasync %s, fh %s)"
+                     % (path, datasync, fh))
 
+    def flush(self, path, fh=None):
+        """
+        Flush cached data to the file system.
+        This is NOT an fsync (I think the difference is fsync goes both
+        ways, while flush is just one-way).
+        """
+        logging.info("flush: %s (fh %s)" % (path, fh))
+
+    def read(self, path, size, offset, fh=None):
+        """
+        Get all or part of the contents of a file.
+        size: Size in bytes to read.
+        offset: Offset in bytes from the start of the file to read from.
+        Does not need to check access rights (operating system will always
+        call access or open first).
+        Returns a byte string with the contents of the file, with a length
+        no greater than 'size'. May also return an int error code.
+
+        If the length of the returned string is 0, it indicates the end of
+        the file, and the OS will not request any more. If the length is
+        nonzero, the OS may request more bytes later.
+        To signal that it is NOT the end of file, but no bytes are
+        presently available (and it is a non-blocking read), return
+        -errno.EAGAIN.
+        If it is a blocking read, just block until ready.
+        """
+        logging.info("read: %s (size %s, offset %s, fh %s)"
+                     % (path, size, offset, fh))
+
+        if fh is None:
             try:
                 if self.files is None:
                     self.files = {"x": "y"}
+                self.files[path] = FileHandler(path, self.lib)
+            except:
+                return -errno.EPERM
 
-                if path in self.files:
-                    # get a file object
-                    logging.info("Retrieving an existing File Handler for: %s"
-                                 % path)
-                    self.files[path].open()
-                else:
-                    # create a file open
-                    logging.info("Creating a File Handler for: %s" % path)
-                    self.files[path] = FileHandler(path, self.lib)
+        return self.files[path].read(size, offset)
 
-                return self.files[path]
-            except Exception as e:
-                logging.info("Error creating a File Handler: %s" % e)
-                return -errno.EACCES
+    def write(self, path, buf, offset, fh=None):
+        """
+        Write over part of a file.
+        buf: Byte string containing the text to write.
+        offset: Offset in bytes from the start of the file to write to.
+        Does not need to check access rights (operating system will always
+        call access or open first).
+        Should only overwrite the part of the file from offset to
+        offset+len(buf).
 
-        def create(self, path, mode, rdev):
-            """
-            Creates a file and opens it for writing.
-            Will be called in favour of mknod+open, but it's optional (OS will
-            fall back on that sequence).
-            mode: Unix file mode flags for the file being created.
-            rdev: Special properties for creation of character or block special
-                    devices (I've never gotten this to work).
-                    Always 0 for regular files or FIFO buffers.
-            See "open" for return value.
-            """
-            logging.info("create: %s (mode %s, rdev %s)"
-                         % (path, oct(mode), rdev))
-            return -errno.EOPNOTSUPP
+        Must return an int: the number of bytes successfully written
+        (should be equal to len(buf) unless an error occured). May also be
+        a negative int, which is an errno code.
+        """
+        logging.info("write: %s (offset %s, fh %s)" % (path, offset, fh))
 
-        def fgetattr(self, path, fh=None):
-            """
-            Retrieves information about a file (the "stat" of a file).
-            Same as Fuse.getattr, but may be given a file handle to an open
-            file, so it can use that instead of having to look up the path.
-            """
-            logging.info("fgetattr: %s (fh %s)" % (path, fh))
-            # We could use fh for a more efficient lookup. Here we just call
-            # the non-file-handle version, getattr.
-            return self.getattr(path)
-
-        def release(self, path, flags, fh=None):
-            """
-            Closes an open file. Allows filesystem to clean up.
-            flags: The same flags the file was opened with (see open).
-            """
-            logging.info("release: %s (flags %s, fh %s)" % (path, oct(flags),
-                                                            fh))
-            if self.files[path].release():
-                logging.info("Complete release: %s (flags %s, fh %s)"
-                             % (path, oct(flags), fh))
-                del self.files[path]
-
-        def fsync(self, path, datasync, fh=None):
-            """
-            Synchronises an open file.
-            datasync: If True, only flush user data, not metadata.
-            """
-            logging.info("fsync: %s (datasync %s, fh %s)"
-                         % (path, datasync, fh))
-
-        def flush(self, path, fh=None):
-            """
-            Flush cached data to the file system.
-            This is NOT an fsync (I think the difference is fsync goes both
-            ways, while flush is just one-way).
-            """
-            logging.info("flush: %s (fh %s)" % (path, fh))
-
-        def read(self, path, size, offset, fh=None):
-            """
-            Get all or part of the contents of a file.
-            size: Size in bytes to read.
-            offset: Offset in bytes from the start of the file to read from.
-            Does not need to check access rights (operating system will always
-            call access or open first).
-            Returns a byte string with the contents of the file, with a length
-            no greater than 'size'. May also return an int error code.
-
-            If the length of the returned string is 0, it indicates the end of
-            the file, and the OS will not request any more. If the length is
-            nonzero, the OS may request more bytes later.
-            To signal that it is NOT the end of file, but no bytes are
-            presently available (and it is a non-blocking read), return
-            -errno.EAGAIN.
-            If it is a blocking read, just block until ready.
-            """
-            logging.info("read: %s (size %s, offset %s, fh %s)"
-                         % (path, size, offset, fh))
-
-            if fh is None:
-                try:
-                    if self.files is None:
-                        self.files = {"x": "y"}
-                    self.files[path] = FileHandler(path, self.lib)
-                except:
-                    return -errno.EPERM
-
-            return self.files[path].read(size, offset)
-
-        def write(self, path, buf, offset, fh=None):
-            """
-            Write over part of a file.
-            buf: Byte string containing the text to write.
-            offset: Offset in bytes from the start of the file to write to.
-            Does not need to check access rights (operating system will always
-            call access or open first).
-            Should only overwrite the part of the file from offset to
-            offset+len(buf).
-
-            Must return an int: the number of bytes successfully written
-            (should be equal to len(buf) unless an error occured). May also be
-            a negative int, which is an errno code.
-            """
-            logging.info("write: %s (offset %s, fh %s)" % (path, offset, fh))
-
-            if fh is None:
-                try:
-                    if self.files is None:
-                        self.files = {"x": "y"}
-                    self.files[path] = FileHandler(path, self.lib)
-                except:
-                    return -errno.EPERM
-
+        if fh is None:
             try:
-                return self.files[path].write(offset, buf)
-            except Exception as ex:
-                logging.info(ex)
+                if self.files is None:
+                    self.files = {"x": "y"}
+                self.files[path] = FileHandler(path, self.lib)
+            except:
+                return -errno.EPERM
 
-        def ftruncate(self, path, size, fh=None):
-            """
-            Shrink or expand a file to a given size.
-            Same as Fuse.truncate, but may be given a file handle to an open
-            file, so it can use that instead of having to look up the path.
-            """
-            logging.info("ftruncate: %s (size %s, fh %s)" % (path, size, fh))
-            return -errno.EOPNOTSUPP
+        try:
+            return self.files[path].write(offset, buf)
+        except Exception as ex:
+            logging.info(ex)
+
+    def ftruncate(self, path, size, fh=None):
+        """
+        Shrink or expand a file to a given size.
+        Same as Fuse.truncate, but may be given a file handle to an open
+        file, so it can use that instead of having to look up the path.
+        """
+        logging.info("ftruncate: %s (size %s, fh %s)" % (path, size, fh))
+        return -errno.EOPNOTSUPP
